@@ -21,6 +21,7 @@ type TestStructureUser struct {
 }
 
 type TestStructureUserDTO struct {
+	ExtraField  string
 	Id          uint
 	Money       int
 	Username    string
@@ -60,6 +61,36 @@ func Test_MapSingleStruct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, dto.DisplayName, fmt.Sprintf("%s %s", user.Firstname, user.Lastname))
 	assert.Equal(t, dto.Username, user.Username)
+	assert.Equal(t, 0, dto.Money)
+
+}
+
+func Test_MapSingleStructWithExisting(t *testing.T) {
+	m := tinymapper.New()
+
+	tinymapper.Register(m, func(user TestStructureUser, dto *TestStructureUserDTO) {
+		dto.DisplayName = fmt.Sprintf("%s %s", user.Firstname, user.Lastname)
+	})
+
+	dto := TestStructureUserDTO{
+		ExtraField: "ExistingData",
+	}
+
+	user := TestStructureUser{
+		Id:           121,
+		Money:        55.5,
+		Username:     "test_user_121",
+		Firstname:    "Test",
+		Lastname:     "User",
+		PinCode:      9939,
+		PasswordHash: "aaabbbccc",
+	}
+
+	err := tinymapper.ToWith[TestStructureUserDTO](m, user, &dto)
+	assert.NoError(t, err)
+	assert.Equal(t, dto.DisplayName, fmt.Sprintf("%s %s", user.Firstname, user.Lastname))
+	assert.Equal(t, dto.Username, user.Username)
+	assert.Equal(t, dto.ExtraField, "ExistingData")
 	assert.Equal(t, 0, dto.Money)
 
 }
